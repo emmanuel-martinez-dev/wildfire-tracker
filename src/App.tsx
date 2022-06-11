@@ -3,7 +3,7 @@ import { LeafletMouseEventHandlerFn } from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
 import fetch from "cross-fetch";
 import { NasaApiResponseData } from "./interfaces";
-import Markers from "./Markers";
+import WildfireMarker from "./WildfireMarker";
 import Modal from "./Modal";
 import "./App.css";
 
@@ -55,7 +55,7 @@ function App() {
 					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 				/>
 				{wildfires.map((wildfire) => (
-					<Markers
+					<WildfireMarker
 						onClick={openModal}
 						key={wildfire.id}
 						position={{

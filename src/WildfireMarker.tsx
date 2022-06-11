@@ -2,13 +2,13 @@ import { LatLngLiteral, LeafletMouseEventHandlerFn } from "leaflet";
 import { Marker } from "react-leaflet";
 import { NasaApiResponseData } from "./interfaces";
 
-interface MarkersProps {
+interface WildfireMarkerProps {
 	position: LatLngLiteral;
 	data: NasaApiResponseData["events"][0];
 	onClick: LeafletMouseEventHandlerFn;
 }
 
-function Markers({ position, data, onClick }: MarkersProps) {
+function WildfireMarker({ position, data, onClick }: WildfireMarkerProps) {
 	return (
 		<Marker
 			position={position}
@@ -22,4 +22,4 @@ function Markers({ position, data, onClick }: MarkersProps) {
 	);
 }
 
-export default Markers;
+export default WildfireMarker;
