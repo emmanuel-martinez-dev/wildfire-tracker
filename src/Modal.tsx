@@ -1,7 +1,8 @@
-import { FormEvent, Fragment } from "react";
+import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import TransactionDetails from "./TransactionDetails";
 import { TransactionData } from "./interfaces";
+import { SourceWallets } from "./types";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -9,6 +10,7 @@ interface ModalProps {
 	handleDonate: (transactionData: TransactionData) => void;
 	title?: string;
 	subtitle?: string;
+	destinationPreferredAsset: SourceWallets[0]["preferred_asset"] | null;
 }
 
 function Modal({
@@ -17,6 +19,7 @@ function Modal({
 	handleDonate,
 	title,
 	subtitle,
+	destinationPreferredAsset,
 }: ModalProps) {
 	return (
 		<Transition appear show={isOpen} as={Fragment}>
@@ -57,7 +60,10 @@ function Modal({
 										{subtitle}
 									</span>
 								</p>
-								<TransactionDetails handleDonate={handleDonate} />
+								<TransactionDetails
+									handleDonate={handleDonate}
+									destinationPreferredAsset={destinationPreferredAsset}
+								/>
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>

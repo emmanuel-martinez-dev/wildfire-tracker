@@ -3,6 +3,7 @@ import { LeafletMouseEvent } from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
 import fetch from "cross-fetch";
 import { NasaApiResponseData, TransactionData } from "./interfaces";
+import { SourceWallets } from "./types";
 import WildfireMarker from "./WildfireMarker";
 import Modal from "./Modal";
 import "./App.css";
@@ -21,6 +22,10 @@ function App() {
 	const [selectedWildfire, setSelectedWildfire] = useState<
 		NasaApiResponseData["events"][0] | null
 	>(null);
+	const [sourceWallets, setSourceWallets] = useState<SourceWallets>([]);
+	const [destinationPreferredAsset, setDestinationPreferredAsset] = useState<
+		SourceWallets[0]["preferred_asset"] | null
+	>(null);
 
 	function closeModal() {
 		setIsOpen(false);
@@ -30,6 +35,11 @@ function App() {
 		const { data: wildfireData } = event.sourceTarget.options;
 		setIsOpen(true);
 		setSelectedWildfire(wildfireData);
+		setDestinationPreferredAsset(
+			sourceWallets.find(
+				(sourceWallet) => sourceWallet.source === wildfireData.sources[0].id,
+			)?.preferred_asset ?? null,
+		);
 	}
 
 	function handleDonate(transactionData: TransactionData) {
@@ -37,12 +47,13 @@ function App() {
 	}
 
 	useEffect(() => {
-		const abortController = new AbortController();
+		const abortNasaApiController = new AbortController();
+		const abortSourceWalletsController = new AbortController();
 		fetch(
 			"https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&source=InciWeb",
 			{
 				method: "GET",
-				signal: abortController.signal,
+				signal: abortNasaApiController.signal,
 			},
 		)
 			.then((response) => {
@@ -56,8 +67,26 @@ function App() {
 				console.error(error);
 			});
 
+		fetch("source_wallets.json", {
+			method: "GET",
+			signal: abortSourceWalletsController.signal,
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(response.statusText);
+				}
+				return response.json() as Promise<SourceWallets>;
+			})
+			.then((data) => {
+				setSourceWallets(data);
+			})
+			.catch((error) => {
+				console.error(error);
+			});
+
 		return () => {
-			abortController.abort();
+			abortNasaApiController.abort();
+			abortSourceWalletsController.abort();
 		};
 	}, []);
 
@@ -71,6 +100,7 @@ function App() {
 				subtitle={`${selectedWildfire?.sources[0]?.id ?? "Unknown source"} ${
 					selectedWildfire?.sources[0]?.url ?? "URL not found"
 				}`}
+				destinationPreferredAsset={destinationPreferredAsset}
 			/>
 			<MapContainer
 				center={[31.608, -109.001]}

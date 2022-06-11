@@ -1,11 +1,16 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import { TransactionData } from "./interfaces";
+import { SourceWallets } from "./types";
 
 interface TransactionDetailsProps {
 	handleDonate: (transactionData: TransactionData) => void;
+	destinationPreferredAsset: SourceWallets[0]["preferred_asset"] | null;
 }
 
-function TransactionDetails({ handleDonate }: TransactionDetailsProps) {
+function TransactionDetails({
+	handleDonate,
+	destinationPreferredAsset,
+}: TransactionDetailsProps) {
 	const [selectedSourceAsset, setSelectedSourceAsset] = useState("XLM");
 
 	function handleSelectSourceAsset(event: ChangeEvent<HTMLSelectElement>) {
@@ -67,8 +72,14 @@ function TransactionDetails({ handleDonate }: TransactionDetailsProps) {
 				Destination Preferred Asset:
 			</p>
 			<p className="mt-1 ml-3 text-sm text-gray-500">
-				{/* hardcoded: should instead bring from source pref_asset */}
-				USDC-GAEB3HSAWRVILER6T5NMX5VAPTK4PPO2BAL37HR2EOUIK567GJFEO437
+				{`${
+					destinationPreferredAsset?.code ||
+					"Destination Asset Code not provided"
+				}${
+					destinationPreferredAsset?.issuer
+						? `-${destinationPreferredAsset?.issuer}`
+						: ""
+				}`}
 			</p>
 			<div className="mt-3">
 				<label
