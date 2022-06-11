@@ -1,0 +1,10 @@
+[
+	{
+		"source": "inciweb",
+		"wallet_address": "GDJQYKVNJS5X5SYKWCW2Z3JIO3QVHZRAYFNYC76WWM2SPITQEKVCYMCC",
+		"preferred_asset": {
+			"code": "USDC",
+			"issuer": "GAEB3HSAWRVILER6T5NMX5VAPTK4PPO2BAL37HR2EOUIK567GJFEO437"
+		}
+	}
+]
