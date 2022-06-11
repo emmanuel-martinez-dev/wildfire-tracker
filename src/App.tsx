@@ -4,9 +4,19 @@ import "./App.css";
 import { NasaApiResponseData } from "./interfaces";
 import { MapContainer, TileLayer } from "react-leaflet";
 import Markers from "./Markers";
+import Modal from "./Modal";
 
 function App() {
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
+	const [isOpen, setIsOpen] = useState(true);
+
+	function closeModal() {
+		setIsOpen(false);
+	}
+
+	function openModal() {
+		setIsOpen(true);
+	}
 
 	useEffect(() => {
 		fetch("https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires", {
@@ -26,6 +36,7 @@ function App() {
 
 	return (
 		<div className="App">
+			<Modal isOpen={isOpen} closeModal={closeModal} />
 			<MapContainer center={[0, 0]} zoom={2} className="h-screen">
 				<TileLayer
 					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
