@@ -9,15 +9,15 @@ import "./App.css";
 
 function App() {
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
-	const [isOpen, setIsOpen] = useState(true);
+	const [isOpen, setIsOpen] = useState(false);
 
 	function closeModal() {
 		setIsOpen(false);
 	}
 
-	function openModal() {
+	const openModal: LeafletMouseEventHandlerFn = () => {
 		setIsOpen(true);
-	}
+	};
 
 	useEffect(() => {
 		const abortController = new AbortController();
