@@ -1,16 +1,25 @@
-import { Marker, useMapEvent } from "react-leaflet";
+import { LatLngLiteral, LeafletMouseEventHandlerFn } from "leaflet";
+import { Marker } from "react-leaflet";
+import { NasaApiResponseData } from "./interfaces";
 
-function Markers({ position, onClick }) {
-	const [long, lat] = position;
-	const map = useMapEvent({
-		click(e) {
-			onClick();
-			console.log(e);
-			console.log(map);
-		},
-	});
+interface MarkersProps {
+	position: LatLngLiteral;
+	data: NasaApiResponseData["events"][0];
+	onClick: LeafletMouseEventHandlerFn;
+}
 
-	return <Marker position={[lat, long]} interactive={false} />;
+function Markers({ position, data, onClick }: MarkersProps) {
+	return (
+		<Marker
+			position={position}
+			eventHandlers={{
+				click: onClick,
+			}}
+			alt="Marker indicating a wildfire in the area"
+			title={data.title}
+			data={data}
+		/>
+	);
 }
 
 export default Markers;

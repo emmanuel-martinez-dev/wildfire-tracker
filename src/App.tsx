@@ -58,8 +58,12 @@ function App() {
 					<Markers
 						onClick={openModal}
 						key={wildfire.id}
-						position={wildfire?.geometry[0].coordinates || [0, 0]}
-					></Markers>
+						position={{
+							lat: wildfire.geometry[0].coordinates[1],
+							lng: wildfire.geometry[0].coordinates[0],
+						}}
+						data={wildfire}
+					/>
 				))}
 			</MapContainer>
 		</div>
