@@ -19,8 +19,10 @@ function App() {
 	}
 
 	useEffect(() => {
+		const abortController = new AbortController();
 		fetch("https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires", {
 			method: "GET",
+			signal: abortController.signal,
 		})
 			.then((response) => {
 				if (!response.ok) {
@@ -32,6 +34,10 @@ function App() {
 			.catch((error) => {
 				console.error(error);
 			});
+
+		return () => {
+			abortController.abort();
+		};
 	}, []);
 
 	return (
