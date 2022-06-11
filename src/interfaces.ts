@@ -25,3 +25,19 @@ export interface NasaApiResponseData {
 		}[];
 	}[];
 }
+
+export interface TransactionData {
+	sourceAssetCode: string;
+	/**
+	 * If native, it's not necessary
+	 */
+	sourceAssetIssuer?: string;
+	sendMaxAmount: string;
+	destinationPublicKey: string;
+	destinationAssetCode: string;
+	/**
+	 * If native, it's not necessary
+	 */
+	destinationAssetIssuer?: string;
+	destinationAmount: string;
+}
