@@ -3,6 +3,7 @@ import fetch from "cross-fetch";
 import logo from "./logo.svg";
 import "./App.css";
 import { NasaApiResponseData } from "./interfaces";
+import { MapContainer, TileLayer, useMap, Marker, Popup } from "react-leaflet";
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -65,6 +66,34 @@ function App() {
 					))}
 				</ul>
 			</main>
+			<MapContainer
+				center={[0, 0]}
+				zoom={2}
+				scrollWheelZoom={false}
+				className="h-screen"
+			>
+				<TileLayer
+					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+				/>
+				{wildfires.map((wildfire) => (
+					<Marker
+						key={wildfire.id}
+						position={
+							wildfire?.geometry[0].coordinates
+								? [
+										wildfire.geometry[0].coordinates[1],
+										wildfire.geometry[0].coordinates[0],
+								  ]
+								: [0, 0]
+						}
+					>
+						<Popup>
+							A pretty CSS3 popup. <br /> Easily customizable.
+						</Popup>
+					</Marker>
+				))}
+			</MapContainer>
 		</div>
 	);
 }
