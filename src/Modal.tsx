@@ -1,15 +1,23 @@
-import { Fragment } from "react";
+import { FormEvent, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import TransactionDetails from "./TransactionDetails";
+import { TransactionData } from "./interfaces";
 
 interface ModalProps {
 	isOpen: boolean;
 	closeModal: () => void;
+	handleDonate: (transactionData: TransactionData) => void;
 	title?: string;
 	subtitle?: string;
 }
 
-function Modal({ isOpen, closeModal, title, subtitle }: ModalProps) {
+function Modal({
+	isOpen,
+	closeModal,
+	handleDonate,
+	title,
+	subtitle,
+}: ModalProps) {
 	return (
 		<Transition appear show={isOpen} as={Fragment}>
 			<Dialog as="div" className="relative z-[900]" onClose={closeModal}>
@@ -49,7 +57,7 @@ function Modal({ isOpen, closeModal, title, subtitle }: ModalProps) {
 										{subtitle}
 									</span>
 								</p>
-								<div className="mt-4"></div>
+								<TransactionDetails handleDonate={handleDonate} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>

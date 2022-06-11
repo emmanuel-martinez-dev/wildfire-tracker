@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { LeafletMouseEvent } from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
 import fetch from "cross-fetch";
-import { NasaApiResponseData } from "./interfaces";
+import { NasaApiResponseData, TransactionData } from "./interfaces";
 import WildfireMarker from "./WildfireMarker";
 import Modal from "./Modal";
 import "./App.css";
@@ -30,6 +30,10 @@ function App() {
 		const { data: wildfireData } = event.sourceTarget.options;
 		setIsOpen(true);
 		setSelectedWildfire(wildfireData);
+	}
+
+	function handleDonate(transactionData: TransactionData) {
+		console.log(transactionData);
 	}
 
 	useEffect(() => {
@@ -62,6 +66,7 @@ function App() {
 			<Modal
 				isOpen={isOpen}
 				closeModal={closeModal}
+				handleDonate={handleDonate}
 				title={selectedWildfire?.title}
 				subtitle={`${selectedWildfire?.sources[0]?.id ?? "Unknown source"} ${
 					selectedWildfire?.sources[0]?.url ?? "URL not found"
