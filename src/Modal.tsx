@@ -1,12 +1,15 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
+import TransactionDetails from "./TransactionDetails";
 
 interface ModalProps {
 	isOpen: boolean;
 	closeModal: () => void;
+	title?: string;
+	subtitle?: string;
 }
 
-function Modal({ isOpen, closeModal }: ModalProps) {
+function Modal({ isOpen, closeModal, title, subtitle }: ModalProps) {
 	return (
 		<Transition appear show={isOpen} as={Fragment}>
 			<Dialog as="div" className="relative z-[900]" onClose={closeModal}>
@@ -33,20 +36,19 @@ function Modal({ isOpen, closeModal }: ModalProps) {
 							leaveFrom="opacity-100 scale-100"
 							leaveTo="opacity-0 scale-95"
 						>
-							<Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+							<Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
 								<Dialog.Title
-									as="h3"
+									as="h2"
 									className="text-lg font-medium leading-6 text-gray-900"
 								>
-									Payment successful
+									{title}
 								</Dialog.Title>
-								<div className="mt-2">
-									<p className="text-sm text-gray-500">
-										Your payment has been successfully submitted. We’ve sent you
-										an email with all of the details of your order.
-									</p>
-								</div>
-
+								<p className="mt-1 font-medium text-gray-900">
+									Destination:
+									<span className="ml-1 font-normal text-gray-500">
+										{subtitle}
+									</span>
+								</p>
 								<div className="mt-4"></div>
 							</Dialog.Panel>
 						</Transition.Child>

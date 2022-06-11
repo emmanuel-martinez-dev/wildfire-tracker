@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LeafletMouseEventHandlerFn } from "leaflet";
+import { LeafletMouseEvent } from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
 import fetch from "cross-fetch";
 import { NasaApiResponseData } from "./interfaces";
@@ -7,24 +7,40 @@ import WildfireMarker from "./WildfireMarker";
 import Modal from "./Modal";
 import "./App.css";
 
+interface MarkerClickHandlerEvent extends LeafletMouseEvent {
+	sourceTarget: {
+		options: {
+			data: NasaApiResponseData["events"][0];
+		};
+	};
+}
+
 function App() {
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
 	const [isOpen, setIsOpen] = useState(false);
+	const [selectedWildfire, setSelectedWildfire] = useState<
+		NasaApiResponseData["events"][0] | null
+	>(null);
 
 	function closeModal() {
 		setIsOpen(false);
 	}
 
-	const openModal: LeafletMouseEventHandlerFn = () => {
+	function openModal(event: MarkerClickHandlerEvent) {
+		const { data: wildfireData } = event.sourceTarget.options;
 		setIsOpen(true);
-	};
+		setSelectedWildfire(wildfireData);
+	}
 
 	useEffect(() => {
 		const abortController = new AbortController();
-		fetch("https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires", {
-			method: "GET",
-			signal: abortController.signal,
-		})
+		fetch(
+			"https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&source=InciWeb",
+			{
+				method: "GET",
+				signal: abortController.signal,
+			},
+		)
 			.then((response) => {
 				if (!response.ok) {
 					throw new Error(response.statusText);
@@ -42,8 +58,15 @@ function App() {
 	}, []);
 
 	return (
-		<div className="App">
-			<Modal isOpen={isOpen} closeModal={closeModal} />
+		<main>
+			<Modal
+				isOpen={isOpen}
+				closeModal={closeModal}
+				title={selectedWildfire?.title}
+				subtitle={`${selectedWildfire?.sources[0]?.id ?? "Unknown source"} ${
+					selectedWildfire?.sources[0]?.url ?? "URL not found"
+				}`}
+			/>
 			<MapContainer
 				center={[31.608, -109.001]}
 				zoom={5}
@@ -66,7 +89,7 @@ function App() {
 					/>
 				))}
 			</MapContainer>
-		</div>
+		</main>
 	);
 }
 
