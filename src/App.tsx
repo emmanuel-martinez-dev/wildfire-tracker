@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import fetch from "cross-fetch";
-import "./App.css";
-import { NasaApiResponseData } from "./interfaces";
+import { LeafletMouseEventHandlerFn } from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
+import fetch from "cross-fetch";
+import { NasaApiResponseData } from "./interfaces";
 import Markers from "./Markers";
 import Modal from "./Modal";
+import "./App.css";
 
 function App() {
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
@@ -43,7 +44,12 @@ function App() {
 	return (
 		<div className="App">
 			<Modal isOpen={isOpen} closeModal={closeModal} />
-			<MapContainer center={[0, 0]} zoom={2} className="h-screen">
+			<MapContainer
+				center={[31.608, -109.001]}
+				zoom={5}
+				className="h-screen"
+				scrollWheelZoom={true}
+			>
 				<TileLayer
 					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
