@@ -3,7 +3,7 @@ import fetch from "cross-fetch";
 import logo from "./logo.svg";
 import "./App.css";
 import { NasaApiResponseData } from "./interfaces";
-import { MapContainer, TileLayer, useMap, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -87,11 +87,7 @@ function App() {
 								  ]
 								: [0, 0]
 						}
-					>
-						<Popup>
-							A pretty CSS3 popup. <br /> Easily customizable.
-						</Popup>
-					</Marker>
+					></Marker>
 				))}
 			</MapContainer>
 		</div>
