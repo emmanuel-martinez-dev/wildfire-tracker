@@ -3,6 +3,8 @@ import fetch from "cross-fetch";
 import "./App.css";
 import { NasaApiResponseData } from "./interfaces";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
+import Markers from "./Markers";
 
 function App() {
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
@@ -31,12 +33,15 @@ function App() {
 				scrollWheelZoom={false}
 				className="h-screen"
 			>
+			<MapContainer center={[0, 0]} zoom={2} className="h-screen">
 				<TileLayer
 					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 				/>
 				{wildfires.map((wildfire) => (
 					<Marker
+					<Markers
+						onClick={openModal}
 						key={wildfire.id}
 						position={
 							wildfire?.geometry[0].coordinates
@@ -47,6 +52,8 @@ function App() {
 								: [0, 0]
 						}
 					></Marker>
+						position={wildfire?.geometry[0].coordinates || [0, 0]}
+					></Markers>
 				))}
 			</MapContainer>
 		</div>
