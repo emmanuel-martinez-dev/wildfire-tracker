@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LeafletMouseEvent } from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
 import fetch from "cross-fetch";
 import { NasaApiResponseData, TransactionData } from "./interfaces";
 import { SourceWallets } from "./types";
+import WalletModal from "./WalletModal";
 import WildfireMarker from "./WildfireMarker";
-import Modal from "./Modal";
+import WildfireModal from "./WildfireModal";
 import Navbar from "./Navbar";
 import "./App.css";
 
@@ -17,9 +18,17 @@ interface MarkerClickHandlerEvent extends LeafletMouseEvent {
 	};
 }
 
+const server = new window.StellarSdk.Server(
+	"https://horizon-testnet.stellar.org",
+);
+
 function App() {
+	const [publicKey, setPublicKey] = useState("");
+	const [balance, setBalance] = useState("0");
+	const [isWalletConnected, setIsWalletConnected] = useState(false);
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpenWildfireModal, setIsOpenWildfireModal] = useState(false);
+	const [isOpenWalletModal, setIsOpenWalletModal] = useState(false);
 	const [selectedWildfire, setSelectedWildfire] = useState<
 		NasaApiResponseData["events"][0] | null
 	>(null);
@@ -28,19 +37,44 @@ function App() {
 		SourceWallets[0]["preferred_asset"] | null
 	>(null);
 
-	function closeModal() {
-		setIsOpen(false);
+	function closeWildfireModal() {
+		setIsOpenWildfireModal(false);
 	}
 
-	function openModal(event: MarkerClickHandlerEvent) {
+	function openWildfireModal(event: MarkerClickHandlerEvent) {
 		const { data: wildfireData } = event.sourceTarget.options;
-		setIsOpen(true);
+		setIsOpenWildfireModal(true);
 		setSelectedWildfire(wildfireData);
 		setDestinationPreferredAsset(
 			sourceWallets.find(
 				(sourceWallet) => sourceWallet.source === wildfireData.sources[0].id,
 			)?.preferred_asset ?? null,
 		);
+	}
+
+	function closeWalletModal() {
+		setIsOpenWalletModal(false);
+	}
+
+	function openWalletModal() {
+		setIsOpenWalletModal(true);
+	}
+
+	const handleConnectionAccepted = useCallback(async () => {
+		try {
+			const key = await window.xBullSDK.getPublicKey();
+			const balances = await getAccountBalances(key);
+			setPublicKey(key);
+			setBalance(balances[0].balance);
+			setIsWalletConnected(true);
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
+	async function getAccountBalances(publicKey: string): Promise<unknown[]> {
+		const account = await server.loadAccount(publicKey);
+		return account.balances;
 	}
 
 	function handleDonate(transactionData: TransactionData) {
@@ -93,16 +127,11 @@ function App() {
 
 	return (
 		<main>
-			<Navbar />
-			<Modal
-				isOpen={isOpen}
-				closeModal={closeModal}
-				handleDonate={handleDonate}
-				title={selectedWildfire?.title}
-				subtitle={`${selectedWildfire?.sources[0]?.id ?? "Unknown source"} ${
-					selectedWildfire?.sources[0]?.url ?? "URL not found"
-				}`}
-				destinationPreferredAsset={destinationPreferredAsset}
+			<Navbar
+				isWalletConnected={isWalletConnected}
+				publicKey={publicKey}
+				balance={balance}
+				handleOpenWalletModal={openWalletModal}
 			/>
 			<MapContainer
 				center={[31.608, -109.001]}
@@ -117,7 +146,7 @@ function App() {
 				/>
 				{wildfires.map((wildfire) => (
 					<WildfireMarker
-						onClick={openModal}
+						onClick={openWildfireModal}
 						key={wildfire.id}
 						position={{
 							lat: wildfire.geometry[0].coordinates[1],
@@ -127,6 +156,21 @@ function App() {
 					/>
 				))}
 			</MapContainer>
+			<WildfireModal
+				isOpen={isOpenWildfireModal}
+				closeModal={closeWildfireModal}
+				handleDonate={handleDonate}
+				title={selectedWildfire?.title}
+				subtitle={`${selectedWildfire?.sources[0]?.id ?? "Unknown source"} ${
+					selectedWildfire?.sources[0]?.url ?? "URL not found"
+				}`}
+				destinationPreferredAsset={destinationPreferredAsset}
+			/>
+			<WalletModal
+				isOpen={isOpenWalletModal}
+				closeModal={closeWalletModal}
+				onSuccess={handleConnectionAccepted}
+			/>
 		</main>
 	);
 }

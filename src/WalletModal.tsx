@@ -4,12 +4,13 @@ import { Dialog, Transition } from "@headlessui/react";
 interface ModalProps {
 	isOpen: boolean;
 	closeModal: () => void;
+	onSuccess: () => void;
 }
 
 function WalletModal({ isOpen, closeModal, onSuccess }: ModalProps) {
 	async function handleConnectionXBull() {
 		try {
-			await xBullSDK.connect({
+			await window.xBullSDK.connect({
 				canRequestPublicKey: true,
 				canRequestSign: true,
 			});
@@ -79,10 +80,9 @@ function WalletModal({ isOpen, closeModal, onSuccess }: ModalProps) {
 									</p>
 									<ul className="my-4 space-y-3">
 										<li>
-											<a
-												href="#"
+											<button
 												onClick={handleConnectionXBull}
-												className="flex items-center p-3 text-base font-bold text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
+												className="flex items-center p-3 w-full text-left text-base font-bold text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
 											>
 												<img
 													src="/xBull_logo.jpg"
@@ -92,13 +92,10 @@ function WalletModal({ isOpen, closeModal, onSuccess }: ModalProps) {
 												<span className="flex-1 ml-3 whitespace-nowrap">
 													xBull
 												</span>
-											</a>
+											</button>
 										</li>
 										<li>
-											<a
-												href="#"
-												className="flex items-center p-3 text-base font-bold text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
-											>
+											<button className="flex items-center p-3 w-full text-left text-base font-bold text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
 												<img
 													src="/Alvedo_logo.svg"
 													alt="Alvedo Logo"
@@ -110,7 +107,7 @@ function WalletModal({ isOpen, closeModal, onSuccess }: ModalProps) {
 												<span className="inline-flex items-center justify-center px-2 py-0.5 ml-3 text-xs font-medium text-gray-500 bg-gray-200 rounded dark:bg-gray-700 dark:text-gray-400">
 													Soon
 												</span>
-											</a>
+											</button>
 										</li>
 									</ul>
 									<div>
