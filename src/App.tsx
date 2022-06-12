@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LeafletMouseEvent } from "leaflet";
 import { MapContainer, TileLayer } from "react-leaflet";
 import fetch from "cross-fetch";
 import { NasaApiResponseData, TransactionData } from "./interfaces";
 import { SourceWallets } from "./types";
+import WalletModal from "./WalletModal";
 import WildfireMarker from "./WildfireMarker";
-import Modal from "./Modal";
+import WildfireModal from "./WildfireModal";
 import Navbar from "./Navbar";
 import "./App.css";
 
@@ -17,9 +18,19 @@ interface MarkerClickHandlerEvent extends LeafletMouseEvent {
 	};
 }
 
+const stellarSdk = window.StellarSdk as typeof import("stellar-sdk");
+const server = new stellarSdk.Server("https://horizon-testnet.stellar.org");
+
 function App() {
+	const [publicKey, setPublicKey] = useState("");
+	const [balance, setBalance] = useState("0");
+	const [availableSourceAssets, setAvailableSourceAssets] = useState<string[]>(
+		[],
+	);
+	const [isWalletConnected, setIsWalletConnected] = useState(false);
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpenWildfireModal, setIsOpenWildfireModal] = useState(false);
+	const [isOpenWalletModal, setIsOpenWalletModal] = useState(false);
 	const [selectedWildfire, setSelectedWildfire] = useState<
 		NasaApiResponseData["events"][0] | null
 	>(null);
@@ -27,14 +38,23 @@ function App() {
 	const [destinationPreferredAsset, setDestinationPreferredAsset] = useState<
 		SourceWallets[0]["preferred_asset"] | null
 	>(null);
+	const [approximateAmountDeducted, setApproximateAmountDeducted] = useState<
+		string | null
+	>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [txSubmitData, setTxSubmitData] = useState<{
+		success: boolean;
+		link?: string;
+		error?: string;
+	} | null>(null);
 
-	function closeModal() {
-		setIsOpen(false);
+	function closeWildfireModal() {
+		setIsOpenWildfireModal(false);
 	}
 
-	function openModal(event: MarkerClickHandlerEvent) {
+	function openWildfireModal(event: MarkerClickHandlerEvent) {
 		const { data: wildfireData } = event.sourceTarget.options;
-		setIsOpen(true);
+		setIsOpenWildfireModal(true);
 		setSelectedWildfire(wildfireData);
 		setDestinationPreferredAsset(
 			sourceWallets.find(
@@ -43,9 +63,164 @@ function App() {
 		);
 	}
 
-	function handleDonate(transactionData: TransactionData) {
-		console.log(transactionData);
+	function closeWalletModal() {
+		setIsOpenWalletModal(false);
 	}
+
+	function openWalletModal() {
+		setIsOpenWalletModal(true);
+	}
+
+	const handleConnectionAccepted = useCallback(async () => {
+		try {
+			const key = await window.xBullSDK.getPublicKey();
+			const balances = await getAccountBalances(key);
+			setPublicKey(key);
+			setBalance(
+				balances.find((balance) => balance.asset_type === "native")?.balance ??
+					"0",
+			);
+			setAvailableSourceAssets(
+				balances.map((balance) => {
+					if (balance.asset_type === "native") {
+						return "XLM";
+					}
+					return `${balance.asset_code}-${balance.asset_issuer}`;
+				}),
+			);
+			setIsWalletConnected(true);
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
+	async function getAccountBalances(publicKey: string) {
+		const account = await server.loadAccount(publicKey);
+		return account.balances;
+	}
+
+	async function getPaymentStrictReceivePaths({
+		destinationAmount,
+		destinationAssetCode,
+		sourceAssetCode,
+		destinationAssetIssuer,
+		sourceAssetIssuer,
+	}: TransactionData): Promise<InstanceType<typeof stellarSdk.Asset>[]> {
+		const sourceAsset = new stellarSdk.Asset(
+			sourceAssetCode,
+			sourceAssetIssuer,
+		);
+		const destinationAsset = new stellarSdk.Asset(
+			destinationAssetCode,
+			destinationAssetIssuer,
+		);
+		const { records } = await server
+			.strictReceivePaths([sourceAsset], destinationAsset, destinationAmount)
+			.call();
+		// TODO: DO THIS SIDE EFFECT ELSEWHERE
+		setApproximateAmountDeducted(records[0].source_amount);
+		return records[0]?.path.map((asset) => {
+			if (asset.asset_type === "native") {
+				return stellarSdk.Asset.native();
+			}
+			return new stellarSdk.Asset(asset.asset_code, asset.asset_issuer);
+		});
+	}
+
+	async function handleDonate(transactionData: TransactionData) {
+		const {
+			destinationAmount,
+			destinationAssetCode,
+			destinationPublicKey,
+			sendMaxAmount,
+			sourceAssetCode,
+			destinationAssetIssuer,
+			sourceAssetIssuer,
+		} = transactionData;
+		const sourceAccount = await server.loadAccount(publicKey);
+		const sourceAsset = new stellarSdk.Asset(
+			sourceAssetCode,
+			sourceAssetIssuer,
+		);
+		const destinationAsset = new stellarSdk.Asset(
+			destinationAssetCode,
+			destinationAssetIssuer,
+		);
+		const isSameAssetTx =
+			stellarSdk.Asset.compare(sourceAsset, destinationAsset) === 0
+				? true
+				: false;
+		if (!isSameAssetTx && approximateAmountDeducted === null) {
+			// only for path payment operations, when we still don't have an approximate amount
+			// to be deducted, we need to get this before submitting transaction
+			await getPaymentStrictReceivePaths(transactionData);
+			return;
+		}
+
+		const tx = new stellarSdk.TransactionBuilder(sourceAccount, {
+			fee: (await server.fetchBaseFee()).toString(),
+			networkPassphrase: stellarSdk.Networks.TESTNET,
+		})
+			.addOperation(
+				isSameAssetTx
+					? stellarSdk.Operation.payment({
+							amount: destinationAmount,
+							asset: destinationAsset,
+							destination: destinationPublicKey,
+					  })
+					: stellarSdk.Operation.pathPaymentStrictReceive({
+							sendAsset: sourceAsset,
+							// TODO: non-null-assertion: test if sendMaxAmount is always defined for different asset operations
+							sendMax: sendMaxAmount!,
+							destination: destinationPublicKey,
+							destAsset: destinationAsset,
+							destAmount: destinationAmount,
+							path: await getPaymentStrictReceivePaths(transactionData),
+					  }),
+			)
+			.setTimeout(30)
+			.build();
+
+		setIsSubmitting(true);
+		try {
+			const xdr = tx.toXDR();
+			// check if extension still has permissions
+			await window.xBullSDK.connect({
+				canRequestPublicKey: true,
+				canRequestSign: true,
+			});
+			const signedXDR = await window.xBullSDK.signXDR(xdr, {
+				publicKey,
+				network: stellarSdk.Networks.TESTNET,
+			});
+			const signedTx = new stellarSdk.Transaction(
+				signedXDR,
+				stellarSdk.Networks.TESTNET,
+			);
+			const txSubmit = await server.submitTransaction(signedTx);
+			console.log("Transaction submitted.", txSubmit);
+			// TODO: set tx link
+			setTxSubmitData({ success: true });
+			// transaction passed, update user balances
+			const balances = await getAccountBalances(publicKey);
+			setBalance(balances[0].balance);
+		} catch (error) {
+			console.error("Something went wrong:", error);
+			// TODO: map tx error to user friendly error message
+			setTxSubmitData({ success: false });
+		}
+		setIsSubmitting(false);
+	}
+
+	const automaticallyConnectWallet = useCallback(
+		async (event: MessageEvent<{ type?: "XBULL_INJECTED" }>) => {
+			if (event.data.type === "XBULL_INJECTED" && Boolean(window.xBullSDK)) {
+				// xBullSDK should be available in the window (global) object
+				await handleConnectionAccepted();
+			}
+		},
+		[handleConnectionAccepted],
+	);
 
 	useEffect(() => {
 		const abortNasaApiController = new AbortController();
@@ -91,18 +266,20 @@ function App() {
 		};
 	}, []);
 
+	useEffect(() => {
+		window.addEventListener("message", automaticallyConnectWallet, false);
+		return () => {
+			window.removeEventListener("message", automaticallyConnectWallet, false);
+		};
+	}, [automaticallyConnectWallet]);
+
 	return (
 		<main>
-			<Navbar />
-			<Modal
-				isOpen={isOpen}
-				closeModal={closeModal}
-				handleDonate={handleDonate}
-				title={selectedWildfire?.title}
-				subtitle={`${selectedWildfire?.sources[0]?.id ?? "Unknown source"} ${
-					selectedWildfire?.sources[0]?.url ?? "URL not found"
-				}`}
-				destinationPreferredAsset={destinationPreferredAsset}
+			<Navbar
+				isWalletConnected={isWalletConnected}
+				publicKey={publicKey}
+				balance={balance}
+				handleOpenWalletModal={openWalletModal}
 			/>
 			<MapContainer
 				center={[31.608, -109.001]}
@@ -117,7 +294,7 @@ function App() {
 				/>
 				{wildfires.map((wildfire) => (
 					<WildfireMarker
-						onClick={openModal}
+						onClick={openWildfireModal}
 						key={wildfire.id}
 						position={{
 							lat: wildfire.geometry[0].coordinates[1],
@@ -127,6 +304,25 @@ function App() {
 					/>
 				))}
 			</MapContainer>
+			<WildfireModal
+				isOpen={isOpenWildfireModal}
+				closeModal={closeWildfireModal}
+				handleDonate={handleDonate}
+				title={selectedWildfire?.title}
+				subtitle={`${selectedWildfire?.sources[0]?.id ?? "Unknown source"} ${
+					selectedWildfire?.sources[0]?.url ?? "URL not found"
+				}`}
+				destinationPreferredAsset={destinationPreferredAsset}
+				availableSourceAssets={availableSourceAssets}
+				approximateAmountDeducted={approximateAmountDeducted}
+				isSubmitting={isSubmitting}
+				txSubmitData={txSubmitData}
+			/>
+			<WalletModal
+				isOpen={isOpenWalletModal}
+				closeModal={closeWalletModal}
+				onSuccess={handleConnectionAccepted}
+			/>
 		</main>
 	);
 }

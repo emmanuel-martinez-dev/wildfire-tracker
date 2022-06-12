@@ -4,23 +4,35 @@ import TransactionDetails from "./TransactionDetails";
 import { TransactionData } from "./interfaces";
 import { SourceWallets } from "./types";
 
-interface ModalProps {
+interface WildfireModalProps {
 	isOpen: boolean;
 	closeModal: () => void;
 	handleDonate: (transactionData: TransactionData) => void;
 	title?: string;
 	subtitle?: string;
 	destinationPreferredAsset: SourceWallets[0]["preferred_asset"] | null;
+	availableSourceAssets: string[];
+	approximateAmountDeducted: string | null;
+	isSubmitting: boolean;
+	txSubmitData: {
+		success: boolean;
+		link?: string;
+		error?: string;
+	} | null;
 }
 
-function Modal({
+function WildfireModal({
 	isOpen,
 	closeModal,
 	handleDonate,
 	title,
 	subtitle,
 	destinationPreferredAsset,
-}: ModalProps) {
+	availableSourceAssets,
+	approximateAmountDeducted,
+	isSubmitting,
+	txSubmitData,
+}: WildfireModalProps) {
 	return (
 		<Transition appear show={isOpen} as={Fragment}>
 			<Dialog as="div" className="relative z-[900]" onClose={closeModal}>
@@ -63,6 +75,10 @@ function Modal({
 								<TransactionDetails
 									handleDonate={handleDonate}
 									destinationPreferredAsset={destinationPreferredAsset}
+									availableSourceAssets={availableSourceAssets}
+									approximateAmountDeducted={approximateAmountDeducted}
+									isSubmitting={isSubmitting}
+									txSubmitData={txSubmitData}
 								/>
 							</Dialog.Panel>
 						</Transition.Child>
@@ -73,4 +89,4 @@ function Modal({
 	);
 }
 
-export default Modal;
+export default WildfireModal;
