@@ -76,9 +76,16 @@ function App() {
 		return account.balances;
 	}
 
-	function handleDonate(transactionData: TransactionData) {
-		console.log(transactionData);
-	}
+
+	const automaticallyConnectWallet = useCallback(
+		async (event: MessageEvent<{ type?: "XBULL_INJECTED" }>) => {
+			if (event.data.type === "XBULL_INJECTED" && Boolean(window.xBullSDK)) {
+				// xBullSDK should be available in the window (global) object
+				await handleConnectionAccepted();
+			}
+		},
+		[handleConnectionAccepted],
+	);
 
 	useEffect(() => {
 		const abortNasaApiController = new AbortController();
@@ -123,6 +130,13 @@ function App() {
 			abortSourceWalletsController.abort();
 		};
 	}, []);
+
+	useEffect(() => {
+		window.addEventListener("message", automaticallyConnectWallet, false);
+		return () => {
+			window.removeEventListener("message", automaticallyConnectWallet, false);
+		};
+	}, [automaticallyConnectWallet]);
 
 	return (
 		<main>
