@@ -12,7 +12,8 @@ El fin de este proyecto es crear una plataforma de donaciones a entidades que co
 ## Instalación
 
 ```bash
-  npm install 
+  npm install
+  npm run dev 
 ```
 
 ## APIs usadas:
