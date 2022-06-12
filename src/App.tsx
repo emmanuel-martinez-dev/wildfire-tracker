@@ -6,6 +6,7 @@ import { NasaApiResponseData, TransactionData } from "./interfaces";
 import { SourceWallets } from "./types";
 import WildfireMarker from "./WildfireMarker";
 import Modal from "./Modal";
+import Navbar from "./Navbar";
 import "./App.css";
 
 interface MarkerClickHandlerEvent extends LeafletMouseEvent {
@@ -92,6 +93,7 @@ function App() {
 
 	return (
 		<main>
+			<Navbar />
 			<Modal
 				isOpen={isOpen}
 				closeModal={closeModal}
