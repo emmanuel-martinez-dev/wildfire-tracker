@@ -94,15 +94,42 @@ function App() {
 		return account.balances;
 	}
 
-	async function handleDonate({
+	async function getPaymentStrictReceivePaths({
 		destinationAmount,
 		destinationAssetCode,
-		destinationPublicKey,
-		sendMaxAmount,
 		sourceAssetCode,
 		destinationAssetIssuer,
 		sourceAssetIssuer,
-	}: TransactionData) {
+	}: TransactionData): Promise<InstanceType<typeof stellarSdk.Asset>[]> {
+		const sourceAsset = new stellarSdk.Asset(
+			sourceAssetCode,
+			sourceAssetIssuer,
+		);
+		const destinationAsset = new stellarSdk.Asset(
+			destinationAssetCode,
+			destinationAssetIssuer,
+		);
+		const { records } = await server
+			.strictReceivePaths([sourceAsset], destinationAsset, destinationAmount)
+			.call();
+		return records[0]?.path.map((asset) => {
+			if (asset.asset_type === "native") {
+				return stellarSdk.Asset.native();
+			}
+			return new stellarSdk.Asset(asset.asset_code, asset.asset_issuer);
+		});
+	}
+
+	async function handleDonate(transactionData: TransactionData) {
+		const {
+			destinationAmount,
+			destinationAssetCode,
+			destinationPublicKey,
+			sendMaxAmount,
+			sourceAssetCode,
+			destinationAssetIssuer,
+			sourceAssetIssuer,
+		} = transactionData;
 		const sourceAccount = await server.loadAccount(publicKey);
 		const sourceAsset = new stellarSdk.Asset(
 			sourceAssetCode,
@@ -116,7 +143,6 @@ function App() {
 			stellarSdk.Asset.compare(sourceAsset, destinationAsset) === 0
 				? true
 				: false;
-		console.log(isSameAssetTx);
 
 		const tx = new stellarSdk.TransactionBuilder(sourceAccount, {
 			fee: (await server.fetchBaseFee()).toString(),
@@ -135,7 +161,7 @@ function App() {
 							destination: destinationPublicKey,
 							destAsset: destinationAsset,
 							destAmount: destinationAmount,
-							// TODO: add path
+							path: await getPaymentStrictReceivePaths(transactionData),
 					  }),
 			)
 			.setTimeout(30)
