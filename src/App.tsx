@@ -38,6 +38,9 @@ function App() {
 	const [destinationPreferredAsset, setDestinationPreferredAsset] = useState<
 		SourceWallets[0]["preferred_asset"] | null
 	>(null);
+	const [approximateAmountDeducted, setApproximateAmountDeducted] = useState<
+		string | null
+	>(null);
 
 	function closeWildfireModal() {
 		setIsOpenWildfireModal(false);
@@ -112,6 +115,8 @@ function App() {
 		const { records } = await server
 			.strictReceivePaths([sourceAsset], destinationAsset, destinationAmount)
 			.call();
+		// TODO: DO THIS SIDE EFFECT ELSEWHERE
+		setApproximateAmountDeducted(records[0].source_amount);
 		return records[0]?.path.map((asset) => {
 			if (asset.asset_type === "native") {
 				return stellarSdk.Asset.native();
@@ -143,6 +148,12 @@ function App() {
 			stellarSdk.Asset.compare(sourceAsset, destinationAsset) === 0
 				? true
 				: false;
+		if (!isSameAssetTx && approximateAmountDeducted === null) {
+			// only for path payment operations, when we still don't have an approximate amount
+			// to be deducted, we need to get this before submitting transaction
+			await getPaymentStrictReceivePaths(transactionData);
+			return;
+		}
 
 		const tx = new stellarSdk.TransactionBuilder(sourceAccount, {
 			fee: (await server.fetchBaseFee()).toString(),
@@ -157,7 +168,8 @@ function App() {
 					  })
 					: stellarSdk.Operation.pathPaymentStrictReceive({
 							sendAsset: sourceAsset,
-							sendMax: sendMaxAmount,
+							// TODO: non-null-assertion: test if sendMaxAmount is always defined for different asset operations
+							sendMax: sendMaxAmount!,
 							destination: destinationPublicKey,
 							destAsset: destinationAsset,
 							destAmount: destinationAmount,
@@ -295,6 +307,7 @@ function App() {
 				}`}
 				destinationPreferredAsset={destinationPreferredAsset}
 				availableSourceAssets={availableSourceAssets}
+				approximateAmountDeducted={approximateAmountDeducted}
 			/>
 			<WalletModal
 				isOpen={isOpenWalletModal}
