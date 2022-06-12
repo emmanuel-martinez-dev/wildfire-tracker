@@ -18,9 +18,8 @@ interface MarkerClickHandlerEvent extends LeafletMouseEvent {
 	};
 }
 
-const server = new window.StellarSdk.Server(
-	"https://horizon-testnet.stellar.org",
-);
+const stellarSdk = window.StellarSdk as typeof import("stellar-sdk");
+const server = new stellarSdk.Server("https://horizon-testnet.stellar.org");
 
 function App() {
 	const [publicKey, setPublicKey] = useState("");
