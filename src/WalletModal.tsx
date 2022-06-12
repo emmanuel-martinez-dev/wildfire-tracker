@@ -6,7 +6,20 @@ interface ModalProps {
 	closeModal: () => void;
 }
 
-function WalletModal({ isOpen, closeModal }: ModalProps) {
+function WalletModal({ isOpen, closeModal, onSuccess }: ModalProps) {
+	async function handleConnectionXBull() {
+		try {
+			await xBullSDK.connect({
+				canRequestPublicKey: true,
+				canRequestSign: true,
+			});
+			onSuccess();
+		} catch (error) {
+			console.error(error);
+		}
+		closeModal();
+	}
+
 	return (
 		<Transition appear show={isOpen} as={Fragment}>
 			<Dialog as="div" className="relative z-[900]" onClose={closeModal}>
@@ -68,6 +81,7 @@ function WalletModal({ isOpen, closeModal }: ModalProps) {
 										<li>
 											<a
 												href="#"
+												onClick={handleConnectionXBull}
 												className="flex items-center p-3 text-base font-bold text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
 											>
 												<img
