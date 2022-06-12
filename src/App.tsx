@@ -41,6 +41,12 @@ function App() {
 	const [approximateAmountDeducted, setApproximateAmountDeducted] = useState<
 		string | null
 	>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [txSubmitData, setTxSubmitData] = useState<{
+		success: boolean;
+		link?: string;
+		error?: string;
+	} | null>(null);
 
 	function closeWildfireModal() {
 		setIsOpenWildfireModal(false);
@@ -179,6 +185,7 @@ function App() {
 			.setTimeout(30)
 			.build();
 
+		setIsSubmitting(true);
 		try {
 			const xdr = tx.toXDR();
 			// check if extension still has permissions
@@ -194,15 +201,19 @@ function App() {
 				signedXDR,
 				stellarSdk.Networks.TESTNET,
 			);
-			await server.submitTransaction(signedTx);
-			console.log("Transaction submitted.");
-
+			const txSubmit = await server.submitTransaction(signedTx);
+			console.log("Transaction submitted.", txSubmit);
+			// TODO: set tx link
+			setTxSubmitData({ success: true });
 			// transaction passed, update user balances
 			const balances = await getAccountBalances(publicKey);
 			setBalance(balances[0].balance);
 		} catch (error) {
 			console.error("Something went wrong:", error);
+			// TODO: map tx error to user friendly error message
+			setTxSubmitData({ success: false });
 		}
+		setIsSubmitting(false);
 	}
 
 	const automaticallyConnectWallet = useCallback(
@@ -308,6 +319,8 @@ function App() {
 				destinationPreferredAsset={destinationPreferredAsset}
 				availableSourceAssets={availableSourceAssets}
 				approximateAmountDeducted={approximateAmountDeducted}
+				isSubmitting={isSubmitting}
+				txSubmitData={txSubmitData}
 			/>
 			<WalletModal
 				isOpen={isOpenWalletModal}

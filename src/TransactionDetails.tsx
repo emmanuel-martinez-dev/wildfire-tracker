@@ -7,6 +7,12 @@ interface TransactionDetailsProps {
 	destinationPreferredAsset: SourceWallets[0]["preferred_asset"] | null;
 	availableSourceAssets: string[];
 	approximateAmountDeducted: string | null;
+	isSubmitting: boolean;
+	txSubmitData: {
+		success: boolean;
+		link?: string;
+		error?: string;
+	} | null;
 }
 
 const DEFAULT_SLIPPAGE = 0.5;
@@ -16,6 +22,8 @@ function TransactionDetails({
 	destinationPreferredAsset,
 	availableSourceAssets,
 	approximateAmountDeducted,
+	isSubmitting,
+	txSubmitData,
 }: TransactionDetailsProps) {
 	const [selectedSourceAsset, setSelectedSourceAsset] = useState("XLM");
 	const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE);
@@ -176,13 +184,22 @@ function TransactionDetails({
 			<div className="flex">
 				<button
 					type="submit"
-					className="inline-flex items-center mt-5 ml-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+					className={`inline-flex items-center mt-5 ml-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+						isSubmitting ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+					disabled={isSubmitting}
 				>
 					{isSameAsset || approximateAmountDeducted
 						? "Donate"
 						: "Calculate transaction"}
 				</button>
 			</div>
+			{txSubmitData ? (
+				<p className="mt-3 text-sm font-medium text-gray-900">
+					{txSubmitData.success
+						? "Transaction submitted correctly."
+						: "Transaction failed."}
+				</p>
+			) : null}
 		</form>
 	);
 }

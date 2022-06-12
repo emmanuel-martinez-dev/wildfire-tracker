@@ -13,6 +13,12 @@ interface WildfireModalProps {
 	destinationPreferredAsset: SourceWallets[0]["preferred_asset"] | null;
 	availableSourceAssets: string[];
 	approximateAmountDeducted: string | null;
+	isSubmitting: boolean;
+	txSubmitData: {
+		success: boolean;
+		link?: string;
+		error?: string;
+	} | null;
 }
 
 function WildfireModal({
@@ -24,6 +30,8 @@ function WildfireModal({
 	destinationPreferredAsset,
 	availableSourceAssets,
 	approximateAmountDeducted,
+	isSubmitting,
+	txSubmitData,
 }: WildfireModalProps) {
 	return (
 		<Transition appear show={isOpen} as={Fragment}>
@@ -69,6 +77,8 @@ function WildfireModal({
 									destinationPreferredAsset={destinationPreferredAsset}
 									availableSourceAssets={availableSourceAssets}
 									approximateAmountDeducted={approximateAmountDeducted}
+									isSubmitting={isSubmitting}
+									txSubmitData={txSubmitData}
 								/>
 							</Dialog.Panel>
 						</Transition.Child>
