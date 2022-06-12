@@ -11,6 +11,7 @@ interface ModalProps {
 	title?: string;
 	subtitle?: string;
 	destinationPreferredAsset: SourceWallets[0]["preferred_asset"] | null;
+	availableSourceAssets: string[];
 }
 
 function Modal({
@@ -20,6 +21,7 @@ function Modal({
 	title,
 	subtitle,
 	destinationPreferredAsset,
+	availableSourceAssets,
 }: ModalProps) {
 	return (
 		<Transition appear show={isOpen} as={Fragment}>
@@ -63,6 +65,7 @@ function Modal({
 								<TransactionDetails
 									handleDonate={handleDonate}
 									destinationPreferredAsset={destinationPreferredAsset}
+									availableSourceAssets={availableSourceAssets}
 								/>
 							</Dialog.Panel>
 						</Transition.Child>

@@ -24,6 +24,9 @@ const server = new stellarSdk.Server("https://horizon-testnet.stellar.org");
 function App() {
 	const [publicKey, setPublicKey] = useState("");
 	const [balance, setBalance] = useState("0");
+	const [availableSourceAssets, setAvailableSourceAssets] = useState<string[]>(
+		[],
+	);
 	const [isWalletConnected, setIsWalletConnected] = useState(false);
 	const [wildfires, setWildfires] = useState<NasaApiResponseData["events"]>([]);
 	const [isOpenWildfireModal, setIsOpenWildfireModal] = useState(false);
@@ -64,7 +67,22 @@ function App() {
 			const key = await window.xBullSDK.getPublicKey();
 			const balances = await getAccountBalances(key);
 			setPublicKey(key);
-			setBalance(balances[0].balance);
+			setBalance(
+				balances.find((balance) => balance.asset_type === "native")?.balance ??
+					"0",
+			);
+			setAvailableSourceAssets(
+				balances
+					.sort((a, b) => {
+						return a.asset_type === "native" ? -1 : 0;
+					})
+					.map((balance) => {
+						if (balance.asset_type === "native") {
+							return "XLM";
+						}
+						return `${balance.asset_code}-${balance.asset_issuer}`;
+					}),
+			);
 			setIsWalletConnected(true);
 		} catch (error) {
 			console.error(error);
@@ -178,6 +196,7 @@ function App() {
 					selectedWildfire?.sources[0]?.url ?? "URL not found"
 				}`}
 				destinationPreferredAsset={destinationPreferredAsset}
+				availableSourceAssets={availableSourceAssets}
 			/>
 			<WalletModal
 				isOpen={isOpenWalletModal}

@@ -5,11 +5,13 @@ import { SourceWallets } from "./types";
 interface TransactionDetailsProps {
 	handleDonate: (transactionData: TransactionData) => void;
 	destinationPreferredAsset: SourceWallets[0]["preferred_asset"] | null;
+	availableSourceAssets: string[];
 }
 
 function TransactionDetails({
 	handleDonate,
 	destinationPreferredAsset,
+	availableSourceAssets,
 }: TransactionDetailsProps) {
 	const [selectedSourceAsset, setSelectedSourceAsset] = useState("XLM");
 
@@ -57,15 +59,13 @@ function TransactionDetails({
 					className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
 					onChange={handleSelectSourceAsset}
 				>
-					{/* hardcoded: should map over user available assets to let him/her choose which one he/she wants
-              we can get available assets with:
-              await server.loadAccount(publicKey);
-              console.log(account.balances);
-          */}
-					<option>XLM</option>
-					<option>
-						USDC-GAEB3HSAWRVILER6T5NMX5VAPTK4PPO2BAL37HR2EOUIK567GJFEO437
-					</option>
+					{availableSourceAssets.length > 0 ? (
+						availableSourceAssets.map((asset) => (
+							<option key={asset}>{asset}</option>
+						))
+					) : (
+						<option>No available source assets</option>
+					)}
 				</select>
 			</div>
 			<p className="mt-3 text-sm font-medium text-gray-900">
