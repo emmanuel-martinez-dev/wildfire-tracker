@@ -105,6 +105,7 @@ function App() {
 			<MapContainer
 				center={[31.608, -109.001]}
 				zoom={5}
+				minZoom={3}
 				className="h-screen"
 				scrollWheelZoom={true}
 			>
