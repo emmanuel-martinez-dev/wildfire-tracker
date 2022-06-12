@@ -89,11 +89,83 @@ function App() {
 		}
 	}, []);
 
-	async function getAccountBalances(publicKey: string): Promise<unknown[]> {
+	async function getAccountBalances(publicKey: string) {
 		const account = await server.loadAccount(publicKey);
 		return account.balances;
 	}
 
+	async function handleDonate({
+		destinationAmount,
+		destinationAssetCode,
+		destinationPublicKey,
+		sendMaxAmount,
+		sourceAssetCode,
+		destinationAssetIssuer,
+		sourceAssetIssuer,
+	}: TransactionData) {
+		const sourceAccount = await server.loadAccount(publicKey);
+		const sourceAsset = new stellarSdk.Asset(
+			sourceAssetCode,
+			sourceAssetIssuer,
+		);
+		const destinationAsset = new stellarSdk.Asset(
+			destinationAssetCode,
+			destinationAssetIssuer,
+		);
+		const isSameAssetTx =
+			stellarSdk.Asset.compare(sourceAsset, destinationAsset) === 0
+				? true
+				: false;
+		console.log(isSameAssetTx);
+
+		const tx = new stellarSdk.TransactionBuilder(sourceAccount, {
+			fee: (await server.fetchBaseFee()).toString(),
+			networkPassphrase: stellarSdk.Networks.TESTNET,
+		})
+			.addOperation(
+				isSameAssetTx
+					? stellarSdk.Operation.payment({
+							amount: destinationAmount,
+							asset: destinationAsset,
+							destination: destinationPublicKey,
+					  })
+					: stellarSdk.Operation.pathPaymentStrictReceive({
+							sendAsset: sourceAsset,
+							sendMax: sendMaxAmount,
+							destination: destinationPublicKey,
+							destAsset: destinationAsset,
+							destAmount: destinationAmount,
+							// TODO: add path
+					  }),
+			)
+			.setTimeout(30)
+			.build();
+
+		try {
+			const xdr = tx.toXDR();
+			// check if extension still has permissions
+			await window.xBullSDK.connect({
+				canRequestPublicKey: true,
+				canRequestSign: true,
+			});
+			const signedXDR = await window.xBullSDK.signXDR(xdr, {
+				publicKey,
+				network: stellarSdk.Networks.TESTNET,
+			});
+			const signedTx = new stellarSdk.Transaction(
+				signedXDR,
+				stellarSdk.Networks.TESTNET,
+			);
+			await server.submitTransaction(signedTx);
+			console.log("Transaction submitted.");
+
+			// transaction passed, update user balances
+			const balances = await getAccountBalances(publicKey);
+			setBalance(balances[0].balance);
+		} catch (error) {
+			console.error("Something went wrong:", error);
+		}
+	}
 
 	const automaticallyConnectWallet = useCallback(
 		async (event: MessageEvent<{ type?: "XBULL_INJECTED" }>) => {
