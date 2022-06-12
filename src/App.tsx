@@ -81,16 +81,12 @@ function App() {
 					"0",
 			);
 			setAvailableSourceAssets(
-				balances
-					.sort((a, b) => {
-						return a.asset_type === "native" ? -1 : 0;
-					})
-					.map((balance) => {
-						if (balance.asset_type === "native") {
-							return "XLM";
-						}
-						return `${balance.asset_code}-${balance.asset_issuer}`;
-					}),
+				balances.map((balance) => {
+					if (balance.asset_type === "native") {
+						return "XLM";
+					}
+					return `${balance.asset_code}-${balance.asset_issuer}`;
+				}),
 			);
 			setIsWalletConnected(true);
 		} catch (error) {
