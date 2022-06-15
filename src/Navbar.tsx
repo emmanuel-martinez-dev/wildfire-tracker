@@ -21,7 +21,7 @@ function Navbar({
 						alt="Wild-Fire Logo"
 					/>
 					<span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">
-						Wilfire-Tracker
+						Wilfdire-Tracker
 					</span>
 				</a>
 				<div className="flex md:order-2">
