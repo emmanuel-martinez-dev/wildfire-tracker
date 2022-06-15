@@ -47,7 +47,7 @@ function WalletModal({ isOpen, closeModal, onSuccess }: ModalProps) {
 							leaveFrom="opacity-100 scale-100"
 							leaveTo="opacity-0 scale-95"
 						>
-							<Dialog.Panel className="w-96 max-w-2xl transform overflow-hidden rounded-2xl bg-white p-0 text-left align-middle shadow-xl transition-all">
+							<Dialog.Panel className="w-96 max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-0 text-left align-middle shadow-xl transition-all">
 								<Dialog.Title>
 									<button
 										type="button"
