@@ -86,7 +86,7 @@ function TransactionDetails({
 				<select
 					id="source-asset"
 					name="source-asset"
-					className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+					className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md"
 					onChange={handleSelectSourceAsset}
 				>
 					{availableSourceAssets.length > 0 ? (
@@ -126,7 +126,7 @@ function TransactionDetails({
 						type="number"
 						name="destination-asset-amount"
 						id="destination-asset-amount"
-						className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-14 sm:text-sm border-gray-300 rounded-md"
+						className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-7 pr-14 sm:text-sm border-gray-300 rounded-md"
 						step="0.01"
 						min="1"
 						placeholder="0.00"
@@ -159,7 +159,7 @@ function TransactionDetails({
 							<input
 								type="number"
 								id="slippage"
-								className="focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+								className="focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
 								step="0.1"
 								min="0.5"
 								placeholder="0.5"
@@ -184,7 +184,7 @@ function TransactionDetails({
 			<div className="flex">
 				<button
 					type="submit"
-					className={`inline-flex items-center mt-5 ml-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+					className={`inline-flex items-center mt-5 ml-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500
 						isSubmitting ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
 					disabled={isSubmitting}
 				>
